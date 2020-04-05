@@ -35,18 +35,6 @@ use Web\Exception\UnexpectedApplicationException;
  * @link    https://orange-management.org
  * @since   1.0.0
  *
- * @todo Orange-Management/Orange-Management#46
- *  If a route starts with a 2 character path it's possible that this can conflict with a valid 2 character lang code e.g.
- *      http://127.0.0.1/hr/staff/list
- *  This is invalid as `hr` is also a valid 2-char lang code.
- *
- * @todo Orange-Management/Orange-Management#45
- *  Currently only the sub-app is handled via config files based on domain or subdomain.
- *  For the future also the default theme and the default unit and the default language per subdomain/domain should be defined per domain/subdomain.
- *  **Why**? The reason for this is that this would allow to create different experiences for the same app if a different domain is used.
- *  E.g. a shop system for different units which is very important for larger organizations with sub-organizations where the different organizations have different shops.
- *  Note: Language is a little bit special as there is also a second part in the url where the language can be defined (after the TLD).
- *
  * @todo Ornage-Management/phpOMS#202
  *  Dynamic string handling
  *  Implement a parsing system which allows to output dynamic strings (sprintf might help)
@@ -202,7 +190,12 @@ class WebApplication extends ApplicationAbstract
         $defaultLang = $config['app']['domains'][$request->getUri()->getHost()]['lang'] ?? $config['app']['default']['lang'];
         $uriLang     = \strtolower($request->getUri()->getPathElement(0));
         $requestLang = $request->getHeader()->getL11n()->getLanguage();
-        $langCode    = ISO639x1Enum::isValidValue($requestLang) && \in_array($requestLang, $config['language']) ? $requestLang : (ISO639x1Enum::isValidValue($uriLang) && \in_array($uriLang, $config['language']) ? $uriLang : $defaultLang);
+        $langCode    = ISO639x1Enum::isValidValue($requestLang) && \in_array($requestLang, $config['language'])
+            ? $requestLang
+            : (ISO639x1Enum::isValidValue($uriLang) && \in_array($uriLang, $config['language'])
+                ? $uriLang
+                : $defaultLang
+            );
 
         $response->getHeader()->getL11n()->loadFromLanguage($langCode, \explode('_', $request->getLocale())[1] ?? '*');
         UriFactory::setQuery('/lang', $request->getHeader()->getL11n()->getLanguage());
