@@ -136,3 +136,9 @@
 [submodule "Modules/TestModule"]
 	path = Modules/TestModule
 	url = https://github.com/Orange-Management/oms-TestModule.git
+[submodule "Modules/CMS"]
+	path = Modules/CMS
+	url = https://github.com/Orange-Management/oms-CMS.git
+[submodule "Modules/Messages"]
+	path = Modules/Messages
+	url = https://github.com/Orange-Management/oms-Messages.git

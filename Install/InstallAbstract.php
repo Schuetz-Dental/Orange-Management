@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Install;
 
+use Model\CoreSettings;
 use Model\Settings;
 
 use Modules\Admin\Controller\ApiController;
@@ -292,6 +293,7 @@ abstract class InstallAbstract extends ApplicationAbstract
 
         self::$mManager     = new ModuleManager($app, __DIR__ . '/../Modules');
         $app->moduleManager = self::$mManager;
+        $app->appSettings   = new CoreSettings($db);
 
         self::$mManager->install('Admin');
         self::$mManager->install('Auditor');
@@ -323,6 +325,14 @@ abstract class InstallAbstract extends ApplicationAbstract
         // setup basic collections
         $collection = new Collection();
         $collection->setName('Modules');
+        $collection->setVirtualPath('/');
+        $collection->setPath('/');
+        $collection->setCreatedBy(new NullAccount(1));
+
+        CollectionMapper::create($collection);
+
+        $collection = new Collection();
+        $collection->setName('Accounts');
         $collection->setVirtualPath('/');
         $collection->setPath('/');
         $collection->setCreatedBy(new NullAccount(1));
@@ -414,7 +424,7 @@ abstract class InstallAbstract extends ApplicationAbstract
     protected static function installApplications(RequestAbstract $request, ConnectionAbstract $db) : void
     {
         $apps  = $request->getDataList('apps');
-        $theme = 'Akebi';
+        $theme = 'Default';
 
         /** @var ApiController $module */
         $module = self::$mManager->get('Admin');
