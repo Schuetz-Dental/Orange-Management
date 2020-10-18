@@ -1,12 +1,7 @@
 v0.1.0-alpha:
-  #13 [Tasks] After editing a task the new content should be shown in the description instead of the old json object
-  #12 [Tasks] Adding a new task element should immediately show that content in the task element list instead of requiring a page reload
-  #11 [Tasks] Show the profile image of the user who created the task/task element
   #10 [Tasks] Implement tags and tag modification
   #1 [CMS] Allow content creation and modification
   #2 [CMS] Make all files modifiable in a file overview instead of a view for every type of file (e.g. template, theme, controller)
-  #1 [News] Allow news creation and modification
-  #2 [News] Implement draft view
   #3 [News] Allow tag modification
   #2 [Profiles] Implement basic profile view
   #1 [Knowledgebase] Allow wiki creation and modification
@@ -16,37 +11,36 @@ v0.1.0-alpha:
   #95 [AdvancedInput] Allow mandatory and optional pre-defined values/text
 
 Orange-Management:
+  #70 [Permission] Handling permissions for returning models
+  #69 [VoiceCommand] Add a real way to turn off/on voice recognition with a button
+  #68 [VoiceCommand] Add visual information if the microphone is recording or not
+  #67 [Install] Check install and file path permissions
   #66 [Build] Create static-tests and unit tests for modules
   #65 [LazyLoading] Replace own image lazy loading with official solution
   #64 [Localization] Implement setting which lets user see all content no matter the language
-  #63 [ProductionAnalysis] Add module
-  #62 [Event, Project, Promotion] Goal definition
-  #61 [MarketingAnalysis] Implement
-  #60 [Blockchain] Implement blockchain for audited elements
-  #59 [Module ID] Don't use name but id for identification
-  #58 [Documents,Articles,...] Allow directory like structure
-  #56 [TemplateCreator] Implement
-  #55 [Approval] Implement Approval module
-  #54 [Modules] Implement online database and downloading api for modules and updates
-  #53 [UML] Create UML diagrams for all modules
   #52 [Tests] Create Bootstrap and PHPUnit config files for modules
   #51 [GithubTemplates] Create github templates for modules
   #50 [ErrorApplication Create error socket on failure
+  #53 [UML] Create UML diagrams for all modules
+  #54 [Modules] Implement online database and downloading api for modules and updates
+  #55 [Approval] Implement Approval module
+  #56 [TemplateCreator] Implement
+  #58 [Documents,Articles,...] Allow directory like structure
+  #59 [Module ID] Don't use name but id for identification
+  #60 [Blockchain] Implement blockchain for audited elements
+  #62 [Event, Project, Promotion] Goal definition
+  #61 [MarketingAnalysis] Implement
+  #63 [ProductionAnalysis] Add module
+  #? [Pagination] Bug: If pagination (next/previous) is implemented in a tab (e.g. second tab) the newly loaded page after clicking on next shows the first tab instead of the tab which contains the list.
+  #? Make forgotten page use the router instead of the manual routing. The problem is that this was using the backend default base template. As a work around we could use the default backend template and an "empty" template for login/forgotten/ and other pages like privacy policy etc.
+  #? Create a unit test which tests if a controller function properly checks for the user permissions. This could be done with specific test method names (e.g. apiFunctionNameWithoutPermission())
 
 phpOMS:
-  #252 [WebRouter] Implement test for defining data from route
-  #251 [WebRouter] Implement test to validate the provided data
-  #250 [Tar] Create tar test without destination path/name
-  #249 [Zip] Create zip test without destination path/name
-  #248 [FileLogger] Create test for getInstance
-  #247 [L11nManager] Create currency rendering test for million and billion dividers
-  #246 [EventManager] Create an event with a regex id/name and trigger it
   #245 [ApplicationManager] Implement test for invalid source and invalid destination
   #244 [JobScheduling] Implement test for Jobs with same value
   #243 [JobScheduling] Implement sortByEnd test coverage
   #242 [DataMapper] Conditional queries bugs/problems
   #241 [DataMapper] Consider global conditionals
-  #240 [DataMapperAbstract] Use binds
   #233 [DataMapper] On delete the relations and relation tables need to be deleted first
   #232 [DataMapper] Relations get updated even if they didn't change
   #231 [TaskSchedule] Use the interval for generating a schedule
@@ -58,20 +52,27 @@ phpOMS:
   #225 [DataMapper] Test the deletion of a model with relations
   #223 [ArrayUtils] Combine power functions with union types
   #221 [DataMapper] Create deleteArray, deleteArrayModel
-  #219 [*Connection] Disable automatic database connection
   #218 [ApplicationAbstract] Replace magic methods with readonly once available
   #215 Covariance for function parameters
   #206 [ItemClustering] Implement
-  #204 [BusinessWarehous] Implement warehouse picking algorithm
-  #194 [Builder] Automatically set prefix during construction
+  #204 [BusinessWarehouse] Implement warehouse picking algorithm
+  #190 [OAuth 2.0] Implement
+  #? [HttpRequest] Fragments should be an array since there can be multiple combined with '&'
+  #? [UriFactory] Fragments should be accessible via {#0} = specific and {#} = all joined with '&'
+  #? [TextSearch] Create full text search for files/in-memory texts and return the best matched files and the matched phrases
+  #? [ClusterAnalysis] Create the different cluster analysis implementations
+  #? [Markdown] Create a substr function which returns a substring without parsing issues. This could be implemented by defining a soft and hard limit for the text length. Or by forcing closing tags at the end.
+  #? [DataMapperAbstract] When using getQuery() and then making a ->where(...) the where will often fail because the table name is suffixed with an integer e.g. `_3`. This means you need to know the depth of the query in order to manually write it. The query builder should figure this out by himself. It knows the _INT value from the `FROM` clause and should just overwrite in the where clause where needed. See the GSD Importer from the exchange module for reference.
+  #? Implement iterable fetch. Currently all models are returned in one go, additionally an iterator should be returned for iterable access in case of MANY results (e.g. Exchange module)
+  #? implement attributes for addAssets. This way we could add the `integrity` attribute for external asset loading
 
 jsOMS:
-<<<<<<< HEAD
+  #99 [VoiceCommand] Implement voice pause/continue command
+  #98 [VoiceCommand] Implement table navigation
+  #97 [VoiceManager] Pull out backend request
+  #96 [VoiceManager] Submit complete recognition to callback
   #95 [AdvancedInput] Allow mandatory and optional pre-defined values/text
   #94 [AdvancedInput] Allow pre-defined values/text
-  #93 [Forms] Remove table as layout tool for forms
-  #92 [Table] Implement pagination
-  #91 [Forms] Hotkey for saving tasks for creation/edit
   #90 [Table] Implement export
   #89 [Table] Implement local and remote filtering
   #88 [Table] If a filter is active it should be highlighted/marked in the table
@@ -86,7 +87,6 @@ jsOMS:
   #79 [Form] After adding a new element some require a binding for editing
   #78 [Form] After adding a new element some require a binding for removal
   #77 [Form] Re-consider collecting the value-paths for adding data
-  #76 [Form] Bug with adding dom elements with the add button
   #75 [Form] Allow multiple/different add buttons in a form
   #74 [AdvanceSelect] Auto filtering client side data
   #73 [AdvancedSelect] Consider none-element
@@ -97,46 +97,331 @@ jsOMS:
   #67 [Logger] Implement UI logging
   #66 [Speech] Remove speech recognition wrapper
   #64 [Library] Get nearest element(s) based on selector
-  #63 [AdvancedInput] Focusout of input element closes dropdown
-  #62 [AdvancedInput] For local data filter/sort by best match
+  #? [Tabs] Fragments should be joined with '&' instead of ','
+  #? [UriFactory] Fragments should be accessible via {#0} = specific and {#} = all joined with '&'
+  #? [UriFactory] Consider to parse EVERY url in the uri factory (see bug with auditlog pagination)
+  #? [Tabs] Slow change of tabs on load if a tab is provided. Before the page is ready the correct tabs should be activated. This way the user doesn't see the tab jumping from the first tab to the n-th tab. Currently the backend rendering is kind of fixing this.
+  #? Highlight currently filtered columns (maybe blue background for easy identification)
+  #? If a form has unsaved content ask the user if he want's to leave the page "beforeunload"-Event
 
 cssOMS:
   #14 Create drop down with search field
   #12 Create slider element
-  #4 Nicer visual input validation
+  #4 Nicer visual input validation (e.g. show checkmark and x in input fields *optional*)
+
+Build:
+  #11 [Language Files] Create language file manager
+  #10 [CI/CD] Create the following CI/CD workflows
+  #? replace phar usage with composer usage
+
+Developer-Guide:
+  #8 Improve layout
 
 Admin:
   #11 [AccountMapper] Create test for getWithPermission()
-  #10 [Admin] Create update functionality
+  #3 [UserAnalytics] Implement
+  #1 [Admin] Add user & group settings
+  #2 [Admin] Allow Admin to login as user
+  #4 [Admin] Add account group removal
+  #5 [Admin] Add account log tab
+  #6 [Admin] Add group log tab for audits
   #9 [Admin] Add group permission removal
   #8 [Admin] Add group permission adjustment
   #7 [Admin] Add group account removal
-  #6 [Admin] Add group log tab for audits
-  #5 [Admin] Add account log tab
-  #4 [Admin] Add account group removal
-  #3 [UserAnalytics] Implement
-  #2 [Admin] Allow Admin to login as user
-  #1 [Admin] Add user & group settings
+  #10 [Admin] Create update functionality
+  #? Consider to move the name1 - name3 into their own name table. This would make it easier to search for names at the cost of ?
+  #? Add some way to hide addresses and contacts from other modules (e.g. we don't want all modules to see all addresses etc. because some of the information might be module specific and should not be allowed to change from another module e.g. shipping address, private phone etc.)
 
-Organization:
-  #1 [Unit] Add unit image
+Auditor:
+  #? Create printable reports based on specific changes (print specific changes for auditors)
+  #? Create audit logs for base elements (e.g. 3 base groups etc. from the installer)
 
-Tasks:
-  #9 "Create task/calendar reference
-  #8 "[Task] Implement schedule
-  #7 "[Tasks] Implement dashboard statistics
-  #6 "[Tasks] Add tags
-  #5 "[Tasks] Add a calender like task view
-  #4 "[Tasks] Batch handle tasks in the dashboard list
-  #3 "[Tasks] Validate that the user is allowed to create a task element for a specific task
-  #2 "[Tasks] Update task status depending on the new task element or updated task element
-  #1 "[Tasks] Implement has seen feature
+CMS:
+  #2 [CMS] Make all files modifiable in a file overview instead of a view for every type of file
+  #1 [CMS] Allow content creation and modification
 
-Profile:
-  #2 [Profiles] Implement basic profile view
-  #1 [Profile] Define account types to show
+Calendar:
+  #1 [Calendar] Limit event loading to a fixed amount of months
+  #2 [Calendar] Event popup
+  #3 [Calendar] Interval templates
+  #4 [Calendar] Allow user to define start of week
+  #? [Calendar] Implement table
+  #? [Calendar] Implement layouts (daily, weekly, monthly, annual view)
+  #? [Chart] Create Gantt chart from calenders (specify duration)
+  #? [Chart] Create Gantt chart from events with specific tag
+  #? [Tag] Implement tags for events
+
+Checklist:
+  #? Create job which automatically creates checklists
+
+ClientManagement:
+  #? Geo map for customer in customer profile
+  #? Geo map of all customers
+  #? Geo map of sales rep areas
+
+Comments:
+  #? Implement
+  #? Allow configuration options for comment list (allow response, allow upvote, max length, allow edit, ...)
+
+Contact:
+  #? Impl. in own profile
+  #? Impl. contact sync/sharing between profiles
+
+Dashboard:
+  #4 [Bug] Drag&Drop element sometimes disappear on drop
+  #1 [Dashboard] Default dashboard styles
+  #2 [Dashboard] Customization
+  #3 [Dashboard] Dynamic providing should be handled in the DB
+
+Database:
+  #1 [Database] Create query module
+
+DatabaseEditor:
+  #1 [DatabaseEditor] Consider storing queries
+
+Draw:
 
 Editor:
   #3 [Editor] Allow editor creation and modification
-  #2 [Editor] Versioning
   #1 [Editor] Implement tools
+  #2 [Editor] Versioning
+
+EventManagement:
+
+Exchange:
+  #? Remove Dashboard
+  #? Save and show information about the last export/import in order to prevent duplicated imports in the same period
+
+Help:
+
+Helper:
+  #? Create job which executes a helper (create new entry and potentially export)
+  #? Create JS Helper module, in here the download and print should be handled (e.g. document.getElementById('iHelperFrame').contentWindow.print();)
+
+Home:
+
+HumanResourceManagement:
+  #1 [HumanResourceManagement] Employee work history
+  #2 [HumanResourceManagement] Employee education history
+  #3 [HumanResourceApplication] Create module
+
+HumanResourceTimeRecording:
+  #1 [HumanResourceTimeRecording] Implement session delete
+  #2 [HumanResourceTimeRecording] Allow session element update
+  #3 [HumanResourceTimeRecording] Allow session update
+  #4 [HumanResourceTimeManagement] Limit employee session list
+
+ItemManagement:
+  #1 [ItemManagement] Re-structure item views
+
+Job:
+
+Kanban:
+  #1 [Kanban]
+  Board: Column width depending amount of columns
+  #2 [Kanban] Edit functionality
+  #3 [Kanban] Styles
+
+Knowledgebase:
+  #2 [Knowledgebase] Implement draft view
+  #1 [Knowledgebase] Allow wiki creation and modification
+  #? Add app and category selection on create
+
+Marketing:
+
+Media:
+  #16 [Directory/Collection] Create a directory/collection table for all modules
+  #15 [Download] Allow to download collections
+  #14 [Download] Allow to download files
+  #3 [MultiUpload] Allow to create a collection when uploading multiple files
+  #5 [Media] Validate file type and file size on the frontend before uploading
+  #6 [Media] Automatically change the file encoding of text files
+  #7 [Media] Automatically enable image interlacing
+  #8 [Media] Encrypt/Decrypt media file
+  #9 [Media] Fix media upload
+  #10 [Media] Allow to create new files (not only upload)
+  #11 [Media] Implement resumable uploads
+  #12 [Media] Implement drag/drop upload
+  #13 [Media] Allow collection modification
+  #? Implement external resources (e.g. link to resource, api specific end-points from dropbox etc.)
+  #? Allow to reference a file (e.g. like a symlink) directly
+  #? Account directories should contain the name of the account not just the id (at least in the DB name)
+  #? Create a home link either as first list element or as part of the breadcrumb navigation which directly links to the logged-in user directory
+  #? Allow to manually overwrite the breadcrumb navigation with a text field. Maybe add a edit button at the end which replaces the breadcrumb with a textfield which then can be edited for faster navigation.
+
+Messages:
+  #? Add notification component for creating and timing push notifications
+
+Monitoring:
+  #1 [Monitoring] Implement code integrity
+
+MyPrivate:
+  #? Consider to remove???
+
+Navigation:
+  #5 [Goto Command] Match navigation command based on approximate matches
+  #1 [Navigation] Improve sidebar navigation
+  #2 [Navigation] Improve slow language loading
+  #3 [Navigation] Cache/optimize navigation language
+  #4 [Navigation] Make navigation modifiable
+
+News:
+  #4 Implement optional email notification
+  #3 [News] Allow tag modification
+  #? [Create/Edit] Fix visual bug where content overflows because of fixed size?
+
+Organization:
+  #? [Organigram] Create more recognizable grouping
+  #? [Organigram] Create organigram in SVG with connection lines
+  #? [Organigram] Create printable version
+  #? [Organigram] Create approval/versioning (e.g. for ISO)
+
+Profile:
+  #1 [Profile] Define account types to show
+  #2 [Profiles] Implement basic profile view
+
+ProjectManagement:
+  #1 [ProjectManagement] Add Gantt chart
+  #2 [ProjectManagement] Add Milestones
+
+Purchase:
+
+QA:
+  #1 [QA] Edit functionality
+  #2 [QA] Profile pics
+  #3 [QA] Voting testing
+
+RiskManagement:
+
+Sales:
+  #1 [Analysis] Create dashboard
+
+Search:
+  #? Implement module specific search (e.g. :tasks title....)
+  #? Implement global search hook
+  #? Implement tag search hook = mix of global and module specific hook
+
+SupplierManagement:
+
+Support:
+  #? Implement
+  #? Allow to move a support request to the Q&A
+  #? Create account for new email address
+
+Tag:
+  #? Add icon to tags
+  #? Create default color set
+  #? Create optional hook which creates tags whenever a group is created
+
+Tasks:
+  #18 [Analysis] Tasks per user
+  #17 [TaskCompletion] Add task completion information
+  #16 Implement optional email notification
+  #15 Implement real unread task count
+  #14 [Tasks] Create groups
+  #10 [Tasks] Implement tags and tag modification
+  #1 [Tasks] Implement has seen feature
+  #2 [Tasks] Update task status depending on the new task element or updated task element
+  #3 [Tasks] Validate that the user is allowed to create a task element for a specific task
+  #4 [Tasks] Batch handle tasks in the dashboard list
+  #5 [Tasks] Add a calender like task view
+  #6 [Tasks] Add tags
+  #7 [Tasks] Implement dashboard statistics
+  #8 [Task] Implement schedule
+  #9 Create task/calendar reference
+
+TestModule:
+
+Tools:
+  #? Create tool to create/modify language files in a more human readable way
+
+Workflow:
+  #2 [Workflow] Request/approval workflow
+  #1 [Workflow] Create module
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+////
+//// Working on
+////
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+//// spl1nes:
+
+  Fix media upload form element
+  Implement default elements for tags
+  Implement task media upload
+  Implement task element edit
+  Implement automatic binding of added ui elements
+  Implement Email/Messaging
+  Implement Calendar
+  Implement clocking
+  Implement profile editing
+  Implement content loading with API (e.g. api/tpl/{app}/route)
+    Done
+    JS now needs to hijack page loads and redirect to /tpl/ or should overwrite all links to /tpl/ during loading
+    Then JS needs to exchange the main content
+  Implement basic ticket module
+  Implement basic customer management
+  Implement basic supplier management
+  Implement basic invoicing
+  Implement Comments
+    Create
+    Edit
+    Response
+    Delete
+    Block by moderator
+  Implement News comments
+  Implement News editing
+    Tags
+    Permissions
+  Load alternative language to local language (load language, else load en, else load any)
+  Implement News creation
+    Tags
+    Favorite
+    Permissions/Groups
+    Make news edit textarea higher (automatically fit to content size)
+    Implement favorites on dashboard
+    Implement headlines on dashboard
+    Implement links hide textarea, other elements show textarea
+  Implement Media hard drive directory add
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+////
+//// Draft ideas
+////
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+//// Database permission handling
+
+Option1: Check full query
+
+select ...
+from ...
+where ...
+  (
+    account_permission_account = ACCOUNT
+    AND (account_permission_unit IS NULL OR account_permission_unit = 'UNIT')
+    AND (account_permission_app IS NULL OR account_permission_app = 'APP')
+    AND (account_permission_module IS NULL OR account_permission_module = 'MODULE')
+    AND (account_permission_type IS NULL OR account_permission_type = 'TYPE')
+    AND (account_permission_element IS NULL OR account_permission_element = 'THIS_ID')
+    AND (account_permission_component IS NULL OR account_permission_component = 'COMPONENT')
+    AND account_permission_permission = ???
+  )
+  OR
+  (
+    group_permission_group IN (...)
+    AND (group_permission_unit IS NULL OR group_permission_unit = 'UNIT')
+    AND (group_permission_app IS NULL OR group_permission_app = 'APP')
+    AND (group_permission_module IS NULL OR group_permission_module = 'MODULE')
+    AND (group_permission_type IS NULL OR group_permission_type = 'TYPE')
+    AND (group_permission_element IS NULL OR group_permission_element = 'THIS_ID')
+    AND (group_permission_component IS NULL OR group_permission_component = 'COMPONENT')
+    AND group_permission_permission = ???
+  )
+
+Option2:
+1. Check if generall permission exists -> just do query
+2. Check for specific element exists -> just do query but with column_id IN (... elements ...)
+
+/////////////////////////////////////////////////////////////////////////////////////////////////

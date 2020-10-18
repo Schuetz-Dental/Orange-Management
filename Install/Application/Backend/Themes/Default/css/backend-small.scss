@@ -1,4 +1,4 @@
-@import "backend_vars";
+@import "backend_vars.scss";
 
 html, body {
     width: 100%;
@@ -17,13 +17,14 @@ body {
 main > header {
     background: var(--header-background);
     border-bottom: 1px solid var(--box-border);
-    padding: 1rem;
+    padding: 0 1rem 0 1rem;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     flex-flow: row;
-    flex: 0;
-    box-shadow: 0 0 30px 3px rgba(90, 71, 114, 0.1);
+    flex-shrink: 0;
+    height: 65px;
+    box-shadow: 0 0 5px 1px rgba(72, 71, 114, 0.2);
 
     > form {
         display: flex;
@@ -54,7 +55,7 @@ main > header {
     text-align: right;
 
     select {
-        background: none;
+        background: var(--nav-category-background);
         color: rgba(255, 255, 255, 0.8);
         font-size: .8rem;
     }
@@ -96,6 +97,10 @@ nav .ham-trigger {
     a {
         padding: 0 5px 0 5px;
         line-height: 25px;
+
+        &:hover, &:focus {
+            color: var(--link-hover);
+        }
     }
 
     i {
@@ -104,10 +109,6 @@ nav .ham-trigger {
 
     li {
         display: inline;
-
-        &:hover {
-            color: var(--link-hover);
-        }
     }
 }
 
@@ -136,9 +137,10 @@ main {
     display: flex;
     align-items: center;
     padding: 0 1rem 0 1rem;
-    height: 60px;
+    height: 65px;
     border-bottom: 1px solid #212628;
     box-sizing: border-box;
+    flex-shrink: 0;
 
     img {
         width: 40px;
@@ -150,6 +152,13 @@ main {
     a {
         display: inline-block;
     }
+}
+
+img.profile-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #fff;
 }
 
 #app-message-container {
@@ -169,4 +178,4 @@ main {
     }
 }
 
-@import "backend_media";
+@import "backend_media.scss";

@@ -15,20 +15,16 @@ declare(strict_types=1);
 namespace Web\Api;
 
 use Model\CoreSettings;
-
 use Modules\Admin\Models\AccountMapper;
 use Modules\Admin\Models\LocalizationMapper;
-
 use Modules\Admin\Models\NullAccount;
 use phpOMS\Account\Account;
 use phpOMS\Account\AccountManager;
+use phpOMS\Application\ApplicationAbstract;
 use phpOMS\Auth\Auth;
-use phpOMS\Auth\LoginReturnType;
 use phpOMS\DataStorage\Cache\CachePool;
 use phpOMS\DataStorage\Cookie\CookieJar;
-use phpOMS\DataStorage\Database\Connection\ConnectionAbstract;
 use phpOMS\DataStorage\Database\DatabasePool;
-use phpOMS\DataStorage\Database\DatabaseStatus;
 use phpOMS\DataStorage\Database\DataMapperAbstract;
 use phpOMS\DataStorage\Session\HttpSession;
 use phpOMS\Dispatcher\Dispatcher;
@@ -37,14 +33,12 @@ use phpOMS\Localization\L11nManager;
 use phpOMS\Message\Http\HttpRequest;
 use phpOMS\Message\Http\HttpResponse;
 use phpOMS\Message\Http\RequestStatusCode;
-use phpOMS\Message\NotificationLevel;
-use phpOMS\Model\Message\Notify;
-use phpOMS\Model\Message\NotifyType;
-use phpOMS\Model\Message\Reload;
+use phpOMS\Model\Html\Head;
 use phpOMS\Module\ModuleManager;
+use phpOMS\Router\RouteVerb;
 use phpOMS\Router\WebRouter;
+use phpOMS\System\File\PathException;
 use phpOMS\System\MimeType;
-
 use phpOMS\Uri\UriFactory;
 use phpOMS\Views\View;
 use Web\WebApplication;
@@ -124,12 +118,6 @@ final class Application
         $this->app->dbPool->create('delete', $this->config['db']['core']['masters']['delete']);
         $this->app->dbPool->create('schema', $this->config['db']['core']['masters']['schema']);
 
-        if ($this->app->dbPool->get()->getStatus() !== DatabaseStatus::OK) {
-            $response->getHeader()->setStatusCode(RequestStatusCode::R_503);
-
-            return;
-        }
-
         /* Checking csrf token, if a csrf token is required at all has to be decided in the route or controller */
         if ($request->getData('CSRF') !== null
             && !\hash_equals($this->app->sessionManager->get('CSRF'), $request->getData('CSRF'))
@@ -139,7 +127,7 @@ final class Application
             return;
         }
 
-        /** @var ConnectionAbstract $con */
+        /** @var \phpOMS\DataStorage\Database\Connection\ConnectionAbstract $con */
         $con = $this->app->dbPool->get();
         DataMapperAbstract::setConnection($con);
 
@@ -185,17 +173,59 @@ final class Application
             return;
         }
 
-        if ($request->getUri()->getPathElement(0) === 'login') {
-            $this->handleLogin($request, $response);
-
-            return;
-        } elseif ($request->getUri()->getPathElement(0) === 'logout') {
-            $this->handleLogout($request, $response);
-
-            return;
-        }
-
         $this->app->moduleManager->initRequestModules($request);
+
+        // add tpl loading
+        $this->app->router->add(
+            '/api/tpl/.*',
+            function() use ($account, $request, $response) : void {
+                $appName = \ucfirst($request->getData('app') ?? 'Backend');
+                $app     = new class() extends ApplicationAbstract
+                {
+                };
+
+                $app->appName        = $appName;
+                $app->dbPool         = $this->app->dbPool;
+                $app->orgId          = $this->app->orgId;
+                $app->accountManager = $this->app->accountManager;
+                $app->appSettings    = $this->app->appSettings;
+                $app->l11nManager    = new L11nManager($app->appName);
+                $app->moduleManager  = new ModuleManager($app, __DIR__ . '/../../Modules');
+                $app->dispatcher     = new Dispatcher($app);
+                $app->eventManager   = new EventManager($app->dispatcher);
+                $app->router         = new WebRouter();
+
+                $app->eventManager->importFromFile(__DIR__ . '/../' . $appName . '/Hooks.php');
+                $app->router->importFromFile(__DIR__ . '/../' . $appName . '/Routes.php');
+
+                $route = \str_replace('/api/tpl', '/' . $appName, $request->getUri()->getRoute());
+
+                $view = new View();
+                $view->setTemplate('/Web/Api/index');
+
+                $response->set('Content', $view);
+                $response->get('Content')->setData('head', new Head());
+
+                $app->l11nManager->loadLanguage(
+                    $response->getHeader()->getL11n()->getLanguage(),
+                    '0',
+                    include __DIR__ . '/../' . $appName . '/lang/' . $response->getHeader()->getL11n()->getLanguage() . '.lang.php'
+                );
+
+                $routed = $app->router->route(
+                    $route,
+                    $request->getData('CSRF'),
+                    $request->getRouteVerb(),
+                    $appName,
+                    $this->app->orgId,
+                    $account,
+                    $request->getData()
+                );
+
+                $response->get('Content')->setData('dispatch', $app->dispatcher->dispatch($routed, $request, $response));
+            },
+            RouteVerb::GET
+        );
 
         $routed = $this->app->router->route(
             $request->getUri()->getRoute(),
@@ -272,60 +302,6 @@ final class Application
     }
 
     /**
-     * Handle login request
-     *
-     * @param HttpRequest  $request  Request
-     * @param HttpResponse $response Response
-     *
-     * @return void
-     *
-     * @since 1.0.0
-     */
-    private function handleLogin(HttpRequest $request, HttpResponse $response) : void
-    {
-        $response->getHeader()->set('Content-Type', MimeType::M_JSON . '; charset=utf-8', true);
-
-        $login = AccountMapper::login((string) ($request->getData('user') ?? ''), (string) ($request->getData('pass') ?? ''));
-
-        if ($login >= LoginReturnType::OK) {
-            $this->app->sessionManager->set('UID', $login, true);
-            $this->app->sessionManager->save();
-            $response->set($request->getUri()->__toString(), new Reload());
-        } else {
-            $response->set($request->getUri()->__toString(), new Notify(
-                'Login failed due to wrong login information',
-                NotifyType::INFO
-            ));
-        }
-    }
-
-    /**
-     * Handle logout request
-     *
-     * @param HttpRequest  $request  Request
-     * @param HttpResponse $response Response
-     *
-     * @return void
-     *
-     * @since 1.0.0
-     */
-    private function handleLogout(HttpRequest $request, HttpResponse $response) : void
-    {
-        $response->getHeader()->set('Content-Type', MimeType::M_JSON . '; charset=utf-8', true);
-
-        $this->app->sessionManager->remove('UID');
-        $this->app->sessionManager->save();
-
-        $response->getHeader()->set('Content-Type', MimeType::M_JSON . '; charset=utf-8', true);
-        $response->set($request->getUri()->__toString(), [
-            'status'   => NotificationLevel::OK,
-            'title'    => 'Logout successfull',
-            'message'  => 'You are redirected to the login page',
-            'response' => null,
-        ]);
-    }
-
-    /**
      * Get application organization
      *
      * @param HttpRequest $request Client request
@@ -342,5 +318,27 @@ final class Application
                 $config['domains'][$request->getUri()->getHost()]['org'] ?? $config['default']['org']
             )
         );
+    }
+
+    /**
+     * Load theme language from path
+     *
+     * @param string $language Language name
+     * @param string $path     Language path
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    private function loadLanguageFromPath(string $language, string $path) : void
+    {
+        /* Load theme language */
+        if (($absPath = \realpath($path)) === false) {
+            throw new PathException($path);
+        }
+
+        /** @noinspection PhpIncludeInspection */
+        $themeLanguage = include $absPath;
+        $this->app->l11nManager->loadLanguage($language, '0', $themeLanguage);
     }
 }

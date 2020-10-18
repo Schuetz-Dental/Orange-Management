@@ -15,12 +15,10 @@ declare(strict_types=1);
 namespace Web\Backend;
 
 use Model\CoreSettings;
-
 use Modules\Admin\Models\AccountMapper;
 use Modules\Admin\Models\LocalizationMapper;
 use Modules\Admin\Models\NullAccount;
 use Modules\Organization\Models\UnitMapper;
-
 use Modules\Profile\Models\ProfileMapper;
 use phpOMS\Account\Account;
 use phpOMS\Account\AccountManager;
@@ -29,7 +27,6 @@ use phpOMS\Asset\AssetType;
 use phpOMS\Auth\Auth;
 use phpOMS\DataStorage\Cache\CachePool;
 use phpOMS\DataStorage\Cookie\CookieJar;
-use phpOMS\DataStorage\Database\Connection\ConnectionAbstract;
 use phpOMS\DataStorage\Database\DatabasePool;
 use phpOMS\DataStorage\Database\DatabaseStatus;
 use phpOMS\DataStorage\Database\DataMapperAbstract;
@@ -45,9 +42,7 @@ use phpOMS\Model\Html\Head;
 use phpOMS\Module\ModuleManager;
 use phpOMS\Router\RouteVerb;
 use phpOMS\Router\WebRouter;
-use phpOMS\System\File\PathException;
 use phpOMS\Uri\UriFactory;
-
 use phpOMS\Views\View;
 use Web\WebApplication;
 
@@ -124,7 +119,6 @@ final class Application
                 $view->setTemplate('/Web/Backend/Error/403_inline');
                 $response->getHeader()->setStatusCode(RequestStatusCode::R_403);
 
-
                 return $view;
             },
             RouteVerb::GET
@@ -139,7 +133,7 @@ final class Application
             return;
         }
 
-        /** @var ConnectionAbstract $con */
+        /** @var \phpOMS\DataStorage\Database\Connection\ConnectionAbstract $con */
         $con = $this->app->dbPool->get();
         DataMapperAbstract::setConnection($con);
 
@@ -199,7 +193,7 @@ final class Application
 
         UriFactory::setQuery('/lang', $response->getHeader()->getL11n()->getLanguage());
 
-        $this->loadLanguageFromPath(
+        $this->app->loadLanguageFromPath(
             $response->getHeader()->getL11n()->getLanguage(),
             __DIR__ . '/lang/' . $response->getHeader()->getL11n()->getLanguage() . '.lang.php'
         );
@@ -208,6 +202,13 @@ final class Application
 
         /* Create html head */
         $this->initResponseHead($head, $request, $response);
+
+        /* Handle not logged in */
+        if (\in_array($request->getUri()->getPathElement(0), ['forgot', 'privacy', 'imprint', 'terms'])) {
+            $this->createBaseLoggedOutResponse($request, $response, $head, $pageView);
+
+            return;
+        }
 
         /* Handle not logged in */
         if ($account->getId() < 1) {
@@ -275,7 +276,7 @@ final class Application
     {
         $response->getHeader()->setStatusCode(RequestStatusCode::R_406);
         $pageView->setTemplate('/Web/Backend/Error/406');
-        $this->loadLanguageFromPath(
+        $this->app->loadLanguageFromPath(
             $response->getHeader()->getL11n()->getLanguage(),
             __DIR__ . '/Error/lang/' . $response->getHeader()->getL11n()->getLanguage() . '.lang.php'
         );
@@ -295,32 +296,10 @@ final class Application
     {
         $response->getHeader()->setStatusCode(RequestStatusCode::R_503);
         $pageView->setTemplate('/Web/Backend/Error/503');
-        $this->loadLanguageFromPath(
+        $this->app->loadLanguageFromPath(
             $response->getHeader()->getL11n()->getLanguage(),
             __DIR__ . '/Error/lang/' . $response->getHeader()->getL11n()->getLanguage() . '.lang.php'
         );
-    }
-
-    /**
-     * Load theme language from path
-     *
-     * @param string $language Language name
-     * @param string $path     Language path
-     *
-     * @return void
-     *
-     * @since 1.0.0
-     */
-    private function loadLanguageFromPath(string $language, string $path) : void
-    {
-        /* Load theme language */
-        if (($absPath = \realpath($path)) === false) {
-            throw new PathException($path);
-        }
-
-        /** @noinspection PhpIncludeInspection */
-        $themeLanguage = include $absPath;
-        $this->app->l11nManager->loadLanguage($language, '0', $themeLanguage);
     }
 
     /**
@@ -354,7 +333,7 @@ final class Application
     {
         $response->getHeader()->setStatusCode(RequestStatusCode::R_403);
         $pageView->setTemplate('/Web/Backend/Error/403');
-        $this->loadLanguageFromPath(
+        $this->app->loadLanguageFromPath(
             $response->getHeader()->getL11n()->getLanguage(),
             __DIR__ . '/Error/lang/' . $response->getHeader()->getL11n()->getLanguage() . '.lang.php'
         );
@@ -408,6 +387,32 @@ final class Application
     }
 
     /**
+     * Create forgot response
+     *
+     * @param HttpRequest  $request  Request
+     * @param HttpResponse $response Response
+     * @param Head         $head     Head to fill
+     * @param View         $pageView View
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    private function createBaseLoggedOutResponse(HttpRequest $request, HttpResponse $response, Head $head, View $pageView) : void
+    {
+        $response->getHeader()->setStatusCode(RequestStatusCode::R_403);
+        $pageView->setTemplate('/Web/Backend/' . $request->getUri()->getPathElement(0));
+
+        $css = \file_get_contents(__DIR__ . '/css/logout-small.css');
+        if ($css === false) {
+            $css = '';
+        }
+
+        $css = \preg_replace('!\s+!', ' ', $css);
+        $head->setStyle('core', $css ?? '');
+    }
+
+    /**
      * Create logged out response
      *
      * @param HttpResponse $response Response
@@ -422,6 +427,14 @@ final class Application
     {
         $response->getHeader()->setStatusCode(RequestStatusCode::R_403);
         $pageView->setTemplate('/Web/Backend/login');
+
+        $css = \file_get_contents(__DIR__ . '/css/logout-small.css');
+        if ($css === false) {
+            $css = '';
+        }
+
+        $css = \preg_replace('!\s+!', ' ', $css);
+        $head->setStyle('core', $css ?? '');
     }
 
     /**

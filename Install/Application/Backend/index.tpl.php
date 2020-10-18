@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Orange Management
  *
@@ -12,6 +13,9 @@
  */
 declare(strict_types=1);
 
+use phpOMS\Uri\UriFactory;
+
+/** @var web\Backend\BackendView $this */
 $nav = $this->getData('nav');
 
 $nav->setTemplate('/Modules/Navigation/Theme/Backend/top');
@@ -37,10 +41,11 @@ $dispatch = $this->getData('dispatch') ?? [];
     <meta name="description" content="<?= $this->getHtml(':meta', '0', '0'); ?>">
     <?= $head->getMeta()->render(); ?>
 
-    <base href="<?= \phpOMS\Uri\UriFactory::build('{/base}'); ?>/">
+    <base href="<?= UriFactory::build('{/base}'); ?>/">
 
-    <link rel="manifest" href="<?= \phpOMS\Uri\UriFactory::build('Web/Backend/manifest.json'); ?>">
-    <link rel="shortcut icon" href="<?= \phpOMS\Uri\UriFactory::build('Web/Backend/img/favicon.ico'); ?>" type="image/x-icon">
+    <link rel="manifest" href="<?= UriFactory::build('Web/Backend/manifest.json'); ?>">
+    <link rel="manifest" href="<?= UriFactory::build('Web/Backend/manifest.webmanifest'); ?>">
+    <link rel="shortcut icon" href="<?= UriFactory::build('Web/Backend/img/favicon.ico'); ?>" type="image/x-icon">
 
     <title><?= $this->printHtml($head->getTitle()); ?></title>
 
@@ -52,15 +57,15 @@ $dispatch = $this->getData('dispatch') ?? [];
 <body>
 <div class="vh" id="dim"></div>
     <input type="checkbox" id="nav-trigger" name="nav-hamburger" class="nav-trigger">
-    <nav>
+    <nav id="nav-side">
         <span id="u-box">
-            <a href="<?= \phpOMS\Uri\UriFactory::build('{/prefix}profile/single?{?}&id=' . $this->profile->getId()); ?>">
-                <img alt="<?= $this->getHtml('User', '0', '0'); ?>" data-lazyload="<?= $this->getProfileImage(); ?>">
+            <a href="<?= UriFactory::build('{/prefix}profile/single?{?}&id=' . $this->profile->getId()); ?>">
+                <img alt="<?= $this->getHtml('User', '0', '0'); ?>" loading="lazy" src="<?= $this->getProfileImage(); ?>">
             </a>
             <span id="logo" itemscope itemtype="http://schema.org/Organization">
                 <select
                     class="plain" id="unit-selector" name="unit"
-                    data-action='[{"listener": "change", "action": [{"key": 1, "type": "redirect", "uri": "{%}&u={#unit-selector}", "target": "self"}]}]'
+                    data-action='[{"listener": "change", "action": [{"key": 1, "type": "redirect", "uri": "{%}&u={!#unit-selector}", "target": "self"}]}]'
                     title="Unit selector">
                     <?php foreach ($this->organizations as $organization) : ?>
                         <option value="<?= $this->printHtml($organization->getId()); ?>"<?= $this->getData('orgId') == $organization->getId() ? ' selected' : ''; ?>><?= $this->printHtml($organization->getName()); ?>
@@ -73,18 +78,18 @@ $dispatch = $this->getData('dispatch') ?? [];
     </nav>
     <main>
         <header>
-            <form id="s-bar" method="GET" action="<?= \phpOMS\Uri\UriFactory::build('{/api}search?{?}&csrf={$CSRF}'); ?>&search={#iSearchBox}">
+            <form id="s-bar" method="GET" action="<?= UriFactory::build('{/api}search?{?}&app=Backend&csrf={$CSRF}'); ?>&search={!#iSearchBox}">
                 <label class="ham-trigger" for="nav-trigger"><i class="fa fa-bars p"></i></label>
                 <span role="search" class="inputWrapper">
                     <span class="textWrapper">
-                        <input id="iSearchBox" name="search" type="text" autofocus="autofocus">
+                        <input id="iSearchBox" name="search" type="text" autocomplete="off" autofocus>
                         <i class="frontIcon fa fa-search fa-lg fa-fw" aria-hidden="true"></i>
                         <i class="endIcon fa fa-times fa-lg fa-fw" aria-hidden="true"></i>
                     </span>
                     <input type="submit" id="iSearchButton" name="searchButton" value="<?= $this->getHtml('Search', '0', '0'); ?>">
                 </span>
             </form>
-            <div id="t-nav-container"><?= $top ?></div>
+            <div id="t-nav-container"><?= $top; ?></div>
         </header>
 
         <div id="content" class="container-fluid" role="main">

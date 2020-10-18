@@ -4,7 +4,7 @@
 \ini_set('display_errors', '1');
 \ini_set('display_startup_errors', '1');
 \error_reporting(\E_ALL);
-//setlocale(LC_ALL, 'en_US.UTF-8');
+\setlocale(\LC_ALL, 'en_US.UTF-8');
 
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/Autoloader.php';
@@ -164,54 +164,54 @@ $CONFIG = [
                 'admin'  => [
                     'db'       => 'mssql', /* db type */
                     'host'     => '127.0.0.1', /* db host address */
-                    'port'     => '5432', /* db host port */
-                    'login'    => 'postgres', /* db login name */
-                    'password' => 'root', /* db login password */
+                    'port'     => '1433', /* db host port */
+                    'login'    => 'sa', /* db login name */
+                    'password' => 'R00troot', /* db login password */
                     'database' => 'oms', /* db name */
                     'weight'   => 1000, /* db table prefix */
                 ],
                 'insert'  => [
                     'db'       => 'mssql', /* db type */
                     'host'     => '127.0.0.1', /* db host address */
-                    'port'     => '5432', /* db host port */
-                    'login'    => 'postgres', /* db login name */
-                    'password' => 'root', /* db login password */
+                    'port'     => '1433', /* db host port */
+                    'login'    => 'sa', /* db login name */
+                    'password' => 'R00troot', /* db login password */
                     'database' => 'oms', /* db name */
                     'weight'   => 1000, /* db table prefix */
                 ],
                 'select'  => [
                     'db'       => 'mssql', /* db type */
                     'host'     => '127.0.0.1', /* db host address */
-                    'port'     => '5432', /* db host port */
-                    'login'    => 'postgres', /* db login name */
-                    'password' => 'root', /* db login password */
+                    'port'     => '1433', /* db host port */
+                    'login'    => 'sa', /* db login name */
+                    'password' => 'R00troot', /* db login password */
                     'database' => 'oms', /* db name */
                     'weight'   => 1000, /* db table prefix */
                 ],
                 'update'  => [
                     'db'       => 'mssql', /* db type */
                     'host'     => '127.0.0.1', /* db host address */
-                    'port'     => '5432', /* db host port */
-                    'login'    => 'postgres', /* db login name */
-                    'password' => 'root', /* db login password */
+                    'port'     => '1433', /* db host port */
+                    'login'    => 'sa', /* db login name */
+                    'password' => 'R00troot', /* db login password */
                     'database' => 'oms', /* db name */
                     'weight'   => 1000, /* db table prefix */
                 ],
                 'delete'  => [
                     'db'       => 'mssql', /* db type */
                     'host'     => '127.0.0.1', /* db host address */
-                    'port'     => '5432', /* db host port */
-                    'login'    => 'postgres', /* db login name */
-                    'password' => 'root', /* db login password */
+                    'port'     => '1433', /* db host port */
+                    'login'    => 'sa', /* db login name */
+                    'password' => 'R00troot', /* db login password */
                     'database' => 'oms', /* db name */
                     'weight'   => 1000, /* db table prefix */
                 ],
                 'schema'  => [
                     'db'       => 'mssql', /* db type */
                     'host'     => '127.0.0.1', /* db host address */
-                    'port'     => '5432', /* db host port */
-                    'login'    => 'postgres', /* db login name */
-                    'password' => 'root', /* db login password */
+                    'port'     => '1433', /* db host port */
+                    'login'    => 'sa', /* db login name */
+                    'password' => 'R00troot', /* db login password */
                     'database' => 'oms', /* db name */
                     'weight'   => 1000, /* db table prefix */
                 ],
@@ -231,17 +231,17 @@ $CONFIG = [
     ],
     'mail' => [
         'imap' => [
-            'host' => '127.0.0.1',
-            'port' => 143,
-            'ssl' => false,
-            'user' => 'test',
+            'host'     => '127.0.0.1',
+            'port'     => 143,
+            'ssl'      => false,
+            'user'     => 'test',
             'password' => '123456',
         ],
         'pop3' => [
-            'host' => '127.0.0.1',
-            'port' => 25,
-            'ssl' => false,
-            'user' => 'test',
+            'host'     => '127.0.0.1',
+            'port'     => 25,
+            'ssl'      => false,
+            'user'     => 'test',
             'password' => '123456',
         ],
     ],
@@ -270,23 +270,44 @@ $CONFIG = [
 
 // Reset database
 if (\defined('RESET') && RESET === '1') {
-    $db = new \PDO($CONFIG['db']['core']['masters']['admin']['db'] . ':host=' .
-        $CONFIG['db']['core']['masters']['admin']['host'],
-        $CONFIG['db']['core']['masters']['admin']['login'],
-        $CONFIG['db']['core']['masters']['admin']['password']
-    );
-    $db->exec('DROP DATABASE IF EXISTS ' . $CONFIG['db']['core']['masters']['admin']['database']);
-    $db->exec('CREATE DATABASE IF NOT EXISTS ' . $CONFIG['db']['core']['masters']['admin']['database']);
-    $db = null;
+    try {
+        $db = new \PDO($CONFIG['db']['core']['masters']['admin']['db'] . ':host=' .
+            $CONFIG['db']['core']['masters']['admin']['host'],
+            $CONFIG['db']['core']['masters']['admin']['login'],
+            $CONFIG['db']['core']['masters']['admin']['password']
+        );
+        $db->exec('DROP DATABASE IF EXISTS ' . $CONFIG['db']['core']['masters']['admin']['database']);
+        $db->exec('CREATE DATABASE IF NOT EXISTS ' . $CONFIG['db']['core']['masters']['admin']['database']);
+        $db = null;
+    } catch (\Throwable $t) {
+        echo "\nCouldn't connect to MYSQL DB\n";
+    }
 
-    $db = new \PDO($CONFIG['db']['core']['postgresql']['admin']['db'] . ':host=' .
-        $CONFIG['db']['core']['postgresql']['admin']['host'],
-        $CONFIG['db']['core']['postgresql']['admin']['login'],
-        $CONFIG['db']['core']['postgresql']['admin']['password']
-    );
-    $db->exec('DROP DATABASE ' . $CONFIG['db']['core']['postgresql']['admin']['database']);
-    $db->exec('CREATE DATABASE ' . $CONFIG['db']['core']['postgresql']['admin']['database']);
-    $db = null;
+    try {
+        $db = new \PDO($CONFIG['db']['core']['postgresql']['admin']['db'] . ':host=' .
+            $CONFIG['db']['core']['postgresql']['admin']['host'],
+            $CONFIG['db']['core']['postgresql']['admin']['login'],
+            $CONFIG['db']['core']['postgresql']['admin']['password']
+        );
+        $db->exec('DROP DATABASE IF EXISTS ' . $CONFIG['db']['core']['postgresql']['admin']['database']);
+        $db->exec('CREATE DATABASE ' . $CONFIG['db']['core']['postgresql']['admin']['database']);
+        $db = null;
+    } catch (\Throwable $t) {
+        echo "\nCouldn't connect to POSTGRESQL DB\n";
+    }
+
+    try {
+        $db = new \PDO($CONFIG['db']['core']['mssql']['admin']['db'] . ':host=' .
+            $CONFIG['db']['core']['mssql']['admin']['host'],
+            $CONFIG['db']['core']['mssql']['admin']['login'],
+            $CONFIG['db']['core']['mssql']['admin']['password']
+        );
+        $db->exec('DROP DATABASE IF EXISTS ' . $CONFIG['db']['core']['mssql']['admin']['database']);
+        $db->exec('CREATE DATABASE ' . $CONFIG['db']['core']['mssql']['admin']['database']);
+        $db = null;
+    } catch (\Throwable $t) {
+        echo "\nCouldn't connect to MSSQL DB\n";
+    }
 }
 
 $httpSession        = new HttpSession();
@@ -304,7 +325,7 @@ DataMapperAbstract::setConnection($GLOBALS['dbpool']->get());
 
 $GLOBALS['frameworkpath'] = '/phpOMS/';
 
-function phpServe(): void
+function phpServe() : void
 {
     // OS detection
     $isWindows = \stristr(\php_uname('s'), 'Windows') !== false;
@@ -356,7 +377,7 @@ function phpServe(): void
     ) . \PHP_EOL;
 
     // Kill the web server when the process ends
-    \register_shutdown_function(function() use ($killCommand, $pid): void {
+    \register_shutdown_function(function() use ($killCommand, $pid) : void {
         echo \PHP_EOL . \sprintf('Stopping server...') . \PHP_EOL;
         echo \sprintf(' %s - Killing process with ID %d', \date('r'), $pid) . \PHP_EOL;
         \exec($killCommand . $pid);

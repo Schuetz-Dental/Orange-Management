@@ -93,7 +93,7 @@ trait ModuleTestTrait
             $columns         = $classReflection->getDefaultProperties()['columns'];
 
             foreach ($columns as $cName => $column) {
-                if (!\in_array($column['type'], ['int', 'string', 'DateTime', 'Json', 'Serializable', 'bool', 'float'])) {
+                if (!\in_array($column['type'], ['int', 'string', 'DateTime', 'DateTimeImmutable', 'Json', 'Serializable', 'bool', 'float'])) {
                     self::assertTrue(false, 'Mapper "' . $class . '" column "' . $cName . '" has invalid type');
                 }
 
@@ -143,7 +143,7 @@ trait ModuleTestTrait
                 // testing existence of member variable in model
                 if (\stripos($column['internal'], '/') !== false) {
                     $column['internal'] = \explode('/', $column['internal'])[0];
-                    $isArray = true;
+                    $isArray            = true;
                 }
 
                 if (!$classReflection->hasProperty($column['internal'])) {
@@ -159,6 +159,7 @@ trait ModuleTestTrait
                     || (\is_bool($property) && $column['type'] === 'bool')
                     || (\is_float($property) && $column['type'] === 'float')
                     || ($property instanceof \DateTime && $column['type'] === 'DateTime')
+                    || ($property instanceof \DateTimeImmutable && $column['type'] === 'DateTimeImmutable')
                     || (isset($ownsOne[$column['internal']]) && $column['type'] === 'int') // if it is in ownsOne it can be a different type because it is a reference!
                 )) {
                     self::assertTrue(false, 'Mapper "' . $class . '" column "' . $cName . '" has invalid type compared to model definition');
@@ -166,17 +167,20 @@ trait ModuleTestTrait
             }
 
             // test correct hasMany model variable type
+            /*
+            @todo: this is a propblem for uninitialized member variables. Find a way to accept uninitialized member variables. getDefaultProperties() doesn't recognize uninitialized member variables
             $rel = $mapperReflection->getDefaultProperties()['hasMany'];
             foreach ($rel as $pName => $def) {
-                if (!isset($defaultProperties[$pName])) {
+                $property = $defaultProperties[$pName] ?? null;
+                if (!\array_key_exists($pName, $defaultProperties)) {
                     self::assertTrue(false, 'Mapper "' . $class . '" property "' . $pName . '" doesn\'t exist in model');
                 }
 
-                $property = $defaultProperties[$pName];
-                if (!\is_array($property)) {
-                    self::assertTrue(false, 'Mapper "' . $class . '" column "' . $cName . '" has invalid type compared to model definition');
+                if (!\is_array($property) && !isset($def['column'])) {
+                    self::assertTrue(false, 'Mapper "' . $class . '" column "' . $pName . '" has invalid type compared to model definition');
                 }
             }
+            */
         }
 
         self::assertTrue(true);
@@ -190,7 +194,7 @@ trait ModuleTestTrait
     {
         $schemaPath = __DIR__ . '/../../Modules/' . self::MODULE_NAME . '/Admin/Install/db.json';
 
-        if (\file_exists($schemaPath)) {
+        if (\is_file($schemaPath)) {
             $db = \json_decode(\file_get_contents($schemaPath), true);
 
             foreach ($db as $name => $table) {
@@ -236,7 +240,7 @@ trait ModuleTestTrait
 
         $schemaPath = __DIR__ . '/../../Modules/' . self::MODULE_NAME . '/Admin/Install/db.json';
 
-        if (\file_exists($schemaPath)) {
+        if (\is_file($schemaPath)) {
             $db = \json_decode(\file_get_contents($schemaPath), true);
 
             foreach ($db as $name => $table) {
@@ -267,7 +271,7 @@ trait ModuleTestTrait
         $schemaPath = __DIR__ . '/../../Modules/' . self::MODULE_NAME . '/Admin/Install/db.json';
         $mappers    = \glob(__DIR__ . '/../../Modules/' . self::MODULE_NAME . '/Models/*Mapper.php');
 
-        if (\file_exists($schemaPath)) {
+        if (\is_file($schemaPath)) {
             $db = \json_decode(\file_get_contents($schemaPath), true);
 
             foreach ($mappers as $mapper) {
@@ -308,6 +312,7 @@ trait ModuleTestTrait
                         || ($column['type'] === 'bool' && \stripos($db[$table]['fields'][$cName]['type'], 'TINYINT') === 0)
                         || ($column['type'] === 'float' && \stripos($db[$table]['fields'][$cName]['type'], 'DECIMAL') === 0)
                         || ($column['type'] === 'DateTime' && \stripos($db[$table]['fields'][$cName]['type'], 'DATETIME') === 0)
+                        || ($column['type'] === 'DateTimeImmutable' && \stripos($db[$table]['fields'][$cName]['type'], 'DATETIME') === 0)
                     )) {
                         self::assertTrue(false, 'Schema "' . $schemaPath . '" type "' . ($column['type'] ?? '') . '" is incompatible with mapper "' . $class . '" definition "' . $db[$table]['fields'][$cName]['type'] . '" for field "' . $cName . '"');
                     }
@@ -367,20 +372,20 @@ trait ModuleTestTrait
     public function testRoutes() : void
     {
         $moduleManager      = new ModuleManager($this->app, __DIR__ . '/../../Modules');
-        $totalBackendRoutes = \file_exists(__DIR__ . '/../../Web/Backend/Routes.php') ? include __DIR__ . '/../../Web/Backend/Routes.php' : [];
-        $totalApiRoutes     = \file_exists(__DIR__ . '/../../Web/Api/Routes.php') ? include __DIR__ . '/../../Web/Api/Routes.php' : [];
+        $totalBackendRoutes = \is_file(__DIR__ . '/../../Web/Backend/Routes.php') ? include __DIR__ . '/../../Web/Backend/Routes.php' : [];
+        $totalApiRoutes     = \is_file(__DIR__ . '/../../Web/Api/Routes.php') ? include __DIR__ . '/../../Web/Api/Routes.php' : [];
 
         $module = $moduleManager->get(self::MODULE_NAME);
 
         if (!($module instanceof NullModule)) {
             // test routes
-            if (\file_exists($module::MODULE_PATH . '/Admin/Routes/Web/Backend.php')) {
+            if (\is_file($module::MODULE_PATH . '/Admin/Routes/Web/Backend.php')) {
                 $moduleRoutes = include $module::MODULE_PATH . '/Admin/Routes/Web/Backend.php';
                 self::assertEquals(1, $this->routesTest($moduleRoutes, $totalBackendRoutes), 'Backend route assert failed for '. self::MODULE_NAME);
             }
 
             // test routes
-            if (\file_exists($module::MODULE_PATH . '/Admin/Routes/Web/Api.php')) {
+            if (\is_file($module::MODULE_PATH . '/Admin/Routes/Web/Api.php')) {
                 $moduleRoutes = include $module::MODULE_PATH . '/Admin/Routes/Web/Api.php';
                 self::assertEquals(1, $this->routesTest($moduleRoutes, $totalApiRoutes), 'Api route assert failed for '. self::MODULE_NAME);
             }
@@ -394,20 +399,20 @@ trait ModuleTestTrait
     public function testHooks() : void
     {
         $moduleManager     = new ModuleManager($this->app, __DIR__ . '/../../Modules');
-        $totalBackendHooks = \file_exists(__DIR__ . '/../../Web/Backend/Hooks.php') ? include __DIR__ . '/../../Web/Backend/Hooks.php' : [];
-        $totalApiHooks     = \file_exists(__DIR__ . '/../../Web/Api/Hooks.php') ? include __DIR__ . '/../../Web/Api/Hooks.php' : [];
+        $totalBackendHooks = \is_file(__DIR__ . '/../../Web/Backend/Hooks.php') ? include __DIR__ . '/../../Web/Backend/Hooks.php' : [];
+        $totalApiHooks     = \is_file(__DIR__ . '/../../Web/Api/Hooks.php') ? include __DIR__ . '/../../Web/Api/Hooks.php' : [];
 
         $module = $moduleManager->get(self::MODULE_NAME);
 
         if (!($module instanceof NullModule)) {
             // test hooks
-            if (\file_exists($module::MODULE_PATH . '/Admin/Hooks/Web/Backend.php')) {
+            if (\is_file($module::MODULE_PATH . '/Admin/Hooks/Web/Backend.php')) {
                 $moduleHooks = include $module::MODULE_PATH . '/Admin/Hooks/Web/Backend.php';
                 self::assertEquals(1, $this->hooksTest($moduleHooks, $totalBackendHooks), 'Backend hook assert failed for '. self::MODULE_NAME);
             }
 
             // test hooks
-            if (\file_exists($module::MODULE_PATH . '/Admin/Hooks/Web/Api.php')) {
+            if (\is_file($module::MODULE_PATH . '/Admin/Hooks/Web/Api.php')) {
                 $moduleHooks = include $module::MODULE_PATH . '/Admin/Hooks/Web/Api.php';
                 self::assertEquals(1, $this->hooksTest($moduleHooks, $totalApiHooks), 'Api hook assert failed for '. self::MODULE_NAME);
             }
@@ -427,7 +432,7 @@ trait ModuleTestTrait
         if (!($module instanceof NullModule)) {
             // test if navigation db entries match json files
             if (!($moduleManager->get('Navigation') instanceof NullModule)
-                && \file_exists($module::MODULE_PATH . '/Admin/Install/Navigation.install.json')
+                && \is_file($module::MODULE_PATH . '/Admin/Install/Navigation.install.json')
             ) {
                 self::assertTrue(
                     $this->navLinksTest(
@@ -485,13 +490,15 @@ trait ModuleTestTrait
             foreach ($dests as $verb) {
                 $parts = \explode(':', $verb['dest']);
                 $path  = __DIR__ . '/../../' . \ltrim(\str_replace('\\', '/', $parts[0]), '/') . '.php';
-                if (!\file_exists($path)) {
+                if (!\is_file($path)) {
                     return -2;
                 }
 
                 // test route method
                 $content = \file_get_contents($path);
-                if (\stripos($content, 'function ' . $parts[\count($parts) - 1]) === false) {
+                if (\stripos($content, 'function ' . $parts[\count($parts) - 1]) === false
+                    && \strpos($parts[\count($parts) - 1], 'Trait') === false
+                ) {
                     return -3;
                 }
             }
@@ -511,7 +518,7 @@ trait ModuleTestTrait
             foreach ($dests['callback'] as $callback) {
                 $parts = \explode(':', $callback);
                 $path  = __DIR__ . '/../../' . \ltrim(\str_replace('\\', '/', $parts[0]), '/') . '.php';
-                if (!\file_exists($path)) {
+                if (!\is_file($path)) {
                     return -2;
                 }
 

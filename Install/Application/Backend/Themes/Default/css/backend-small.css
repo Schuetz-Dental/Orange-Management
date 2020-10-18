@@ -9,6 +9,9 @@
   --input-background-active: rgba(255, 255, 255);
   --input-icon-color: rgba(54, 150, 219, .6);
   --input-icon-color-active: rgba(54, 150, 219, 1);
+  --button-main-background: rgba(166, 135, 232, .6);
+  --button-main-background-active: rgba(166, 135, 232, .8);
+  --button-main-color: rgba(255, 255, 255, .9);
   --text-on-background-color: rgba(255, 255, 255, 0.7);
   --text-on-background-color-2: rgba(255, 255, 255, 0.85);
   --nav-category-background: #343a40;
@@ -36,6 +39,10 @@
   --badge-background: #3697db;
   --box-border: #ebedf2;
   --box-highlight: #3697db;
+  --color-blue: #3697db;
+  --color-red: #e74c3c;
+  --color-green: #2ecc71;
+  --color-yellow: #ffde5b;
   --header-background: rgb(255, 255, 255); }
 
 html, body {
@@ -53,13 +60,14 @@ body {
 main > header {
   background: var(--header-background);
   border-bottom: 1px solid var(--box-border);
-  padding: 1rem;
+  padding: 0 1rem 0 1rem;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   flex-flow: row;
-  flex: 0;
-  box-shadow: 0 0 30px 3px rgba(90, 71, 114, 0.1); }
+  flex-shrink: 0;
+  height: 65px;
+  box-shadow: 0 0 5px 1px rgba(72, 71, 114, 0.2); }
   main > header > form {
     display: flex;
     flex: 1;
@@ -82,7 +90,7 @@ main > header {
   flex: 1;
   text-align: right; }
   #logo select {
-    background: none;
+    background: var(--nav-category-background);
     color: rgba(255, 255, 255, 0.8);
     font-size: .8rem; }
 
@@ -115,12 +123,12 @@ nav .ham-trigger {
   #t-nav a {
     padding: 0 5px 0 5px;
     line-height: 25px; }
+    #t-nav a:hover, #t-nav a:focus {
+      color: var(--link-hover); }
   #t-nav i {
     margin-right: 5px; }
   #t-nav li {
     display: inline; }
-    #t-nav li:hover {
-      color: var(--link-hover); }
 
 main {
   display: flex;
@@ -144,9 +152,10 @@ main {
   display: flex;
   align-items: center;
   padding: 0 1rem 0 1rem;
-  height: 60px;
+  height: 65px;
   border-bottom: 1px solid #212628;
-  box-sizing: border-box; }
+  box-sizing: border-box;
+  flex-shrink: 0; }
   #u-box img {
     width: 40px;
     height: 40px;
@@ -154,6 +163,12 @@ main {
     border: 2px solid #fff; }
   #u-box a {
     display: inline-block; }
+
+img.profile-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #fff; }
 
 #app-message-container {
   position: absolute;
@@ -172,6 +187,7 @@ main {
 @media only screen and (max-width: 500px) {
   nav .ham-trigger {
     display: flex; } }
+
 @media only screen and (max-width: 600px) {
   main > header {
     flex-flow: column;
@@ -179,10 +195,10 @@ main {
     padding: 1rem; }
     main > header form {
       width: 100%; }
-
   #t-nav-container {
     order: -1;
     margin-bottom: .5rem; } }
+
 @media only screen and (max-width: 1000px) {
   #t-nav .link {
     display: none; } }

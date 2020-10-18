@@ -21,9 +21,9 @@ use phpOMS\Localization\Localization;
 use phpOMS\Log\FileLogger;
 use phpOMS\Message\Http\HttpRequest;
 use phpOMS\Message\Http\HttpResponse;
+use phpOMS\System\File\PathException;
 use phpOMS\Uri\HttpUri;
 use phpOMS\Uri\UriFactory;
-
 use Web\Exception\DatabaseException;
 use Web\Exception\UnexpectedApplicationException;
 
@@ -47,6 +47,8 @@ use Web\Exception\UnexpectedApplicationException;
  * @todo Orange-Management/Orange-Management#65
  *  [LazyLoading] Replace own image lazy loading with official solution
  *  Once the majority of all browsers support `loading="lazy"` this should be used instead of the currently implemented lazy loading version.
+ *
+ * @codeCoverageIgnore
  */
 class WebApplication extends ApplicationAbstract
 {
@@ -69,7 +71,7 @@ class WebApplication extends ApplicationAbstract
 
             UriFactory::setQuery('/prefix', '');
             UriFactory::setQuery('/api', 'api/');
-            $applicationName = $this->getApplicationName(HttpUri::fromCurrent(), $config['app']);
+            $applicationName = $this->getApplicationName(HttpUri::fromCurrent(), $config['app'], $config['page']['root']);
             $request         = $this->initRequest($config['page']['root'], $config['app']);
             $response        = $this->initResponse($request, $config);
 
@@ -153,10 +155,10 @@ class WebApplication extends ApplicationAbstract
         $langCode    = ISO639x1Enum::isValidValue($uriLang) ? $uriLang : (ISO639x1Enum::isValidValue($requestLang) ? $requestLang : $defaultLang);
 
         $pathOffset = $subDirDepth
-            + (ISO639x1Enum::isValidValue($uriLang) ?
-                1 + ($this->getApplicationNameFromString($request->getUri()->getPathElement($subDirDepth + 1)) !== 'E500' ? 1 : 0) :
-                0 + ($this->getApplicationNameFromString($request->getUri()->getPathElement($subDirDepth + 0)) !== 'E500' ? 1 : 0)
-        );
+            + (ISO639x1Enum::isValidValue($uriLang)
+                ? 1 + ($this->getApplicationNameFromString($request->getUri()->getPathElement($subDirDepth + 1)) !== 'E500' ? 1 : 0)
+                : 0 + ($this->getApplicationNameFromString($request->getUri()->getPathElement($subDirDepth + 0)) !== 'E500' ? 1 : 0)
+            );
 
         $request->createRequestHashs($pathOffset);
         $request->getUri()->setRootPath($rootPath);
@@ -215,15 +217,18 @@ class WebApplication extends ApplicationAbstract
     /**
      * Get name of the application.
      *
-     * @param HttpUri                                                                          $uri    Current Uri
-     * @param array{domains:array, default:array{id:string, app:string, org:int, lang:string}} $config App configuration
+     * @param HttpUri                                                                          $uri      Current Uri
+     * @param array{domains:array, default:array{id:string, app:string, org:int, lang:string}} $config   App configuration
+     * @param string                                                                           $rootPath Root path
      *
      * @return string Application name
      *
      * @since 1.0.0
      */
-    private function getApplicationName(HttpUri $uri, array $config) : string
+    private function getApplicationName(HttpUri $uri, array $config, string $rootPath) : string
     {
+        $subDirDepth = \substr_count($rootPath, '/') - 1;
+
         // check subdomain
         $appName = $uri->getSubdomain();
         $appName = $this->getApplicationNameFromString($appName);
@@ -233,22 +238,22 @@ class WebApplication extends ApplicationAbstract
         }
 
         // check uri path 0 (no language is defined)
-        $appName = $uri->getPathElement(0);
+        $appName = $uri->getPathElement($subDirDepth + 0);
         $appName = $this->getApplicationNameFromString($appName);
 
         if ($appName !== 'E500') {
-            UriFactory::setQuery('/prefix', (empty(UriFactory::getQuery('/prefix')) ? '' : UriFactory::getQuery('/prefix') . '/') . $uri->getPathElement(1) . '/');
+            UriFactory::setQuery('/prefix', (empty(UriFactory::getQuery('/prefix')) ? '' : UriFactory::getQuery('/prefix') . '/') . $uri->getPathElement($subDirDepth + 1) . '/');
 
             return $appName;
         }
 
         // check uri path 1 (language is defined)
-        if (ISO639x1Enum::isValidValue($uri->getPathElement(0))) {
-            $appName = $uri->getPathElement(1);
+        if (ISO639x1Enum::isValidValue($uri->getPathElement($subDirDepth + 0))) {
+            $appName = $uri->getPathElement($subDirDepth + 1);
             $appName = $this->getApplicationNameFromString($appName);
 
             if ($appName !== 'E500') {
-                UriFactory::setQuery('/prefix', (empty(UriFactory::getQuery('/prefix')) ? '' : UriFactory::getQuery('/prefix') . '/') . $uri->getPathElement(1) . '/');
+                UriFactory::setQuery('/prefix', (empty(UriFactory::getQuery('/prefix')) ? '' : UriFactory::getQuery('/prefix') . '/') . $uri->getPathElement($subDirDepth + 1) . '/');
 
                 return $appName;
             }
@@ -293,5 +298,27 @@ class WebApplication extends ApplicationAbstract
     private function getApplicationTheme(HttpRequest $request, array $config) : string
     {
         return $config[$request->getUri()->getHost()]['theme'] ?? 'Backend';
+    }
+
+    /**
+     * Load theme language from path
+     *
+     * @param string $language Language name
+     * @param string $path     Language path
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    public function loadLanguageFromPath(string $language, string $path) : void
+    {
+        /* Load theme language */
+        if (($absPath = \realpath($path)) === false) {
+            throw new PathException($path);
+        }
+
+        /** @noinspection PhpIncludeInspection */
+        $themeLanguage = include $absPath;
+        $this->l11nManager->loadLanguage($language, '0', $themeLanguage);
     }
 }

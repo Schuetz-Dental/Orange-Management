@@ -5,9 +5,9 @@
 \ini_set('display_startup_errors', 1);
 \error_reporting(\E_ALL);
 
-if (\file_exists('vendor/autoload.php')) {
+if (\is_file('vendor/autoload.php')) {
     include_once 'vendor/autoload.php';
-} elseif (\file_exists('../../vendor/autoload.php')) {
+} elseif (\is_file('../../vendor/autoload.php')) {
     include_once '../../vendor/autoload.php';
 }
 
@@ -241,17 +241,17 @@ $CONFIG = [
     ],
     'mail' => [
         'imap' => [
-            'host' => '127.0.0.1',
-            'port' => 143,
-            'ssl' => false,
-            'user' => 'test',
+            'host'     => '127.0.0.1',
+            'port'     => 143,
+            'ssl'      => false,
+            'user'     => 'test',
             'password' => '123456',
         ],
         'pop3' => [
-            'host' => '127.0.0.1',
-            'port' => 25,
-            'ssl' => false,
-            'user' => 'test',
+            'host'     => '127.0.0.1',
+            'port'     => 25,
+            'ssl'      => false,
+            'user'     => 'test',
             'password' => '123456',
         ],
     ],

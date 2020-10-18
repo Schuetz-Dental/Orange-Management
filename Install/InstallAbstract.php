@@ -15,8 +15,9 @@ declare(strict_types=1);
 namespace Install;
 
 use Model\CoreSettings;
-use Model\Settings;
-
+use Model\Setting;
+use Model\SettingMapper;
+use Model\SettingsEnum;
 use Modules\Admin\Controller\ApiController;
 use Modules\Admin\Models\Account;
 use Modules\Admin\Models\AccountMapper;
@@ -28,7 +29,6 @@ use Modules\Media\Models\Collection;
 use Modules\Media\Models\CollectionMapper;
 use Modules\Organization\Models\Status;
 use Modules\Organization\Models\UnitMapper;
-
 use phpOMS\Account\AccountStatus;
 use phpOMS\Account\AccountType;
 use phpOMS\Account\GroupStatus;
@@ -70,6 +70,7 @@ abstract class InstallAbstract extends ApplicationAbstract
      * @return void
      *
      * @since 1.0.0
+     * @codeCoverageIgnore
      */
     protected function setupHandlers() : void
     {
@@ -92,9 +93,8 @@ abstract class InstallAbstract extends ApplicationAbstract
         \file_put_contents(__DIR__ . '/../Console/Hooks.php', '<?php return [];');
 
         $dirs = \scandir(__DIR__ . '/../Web');
-
         if ($dirs === false) {
-            return;
+            return; // @codeCoverageIgnore
         }
 
         foreach ($dirs as $dir) {
@@ -104,7 +104,8 @@ abstract class InstallAbstract extends ApplicationAbstract
             ) {
                 continue;
             }
-                Directory::delete(__DIR__ . '/../Web/' . $dir);
+
+            Directory::delete(__DIR__ . '/../Web/' . $dir);
         }
     }
 
@@ -237,7 +238,24 @@ abstract class InstallAbstract extends ApplicationAbstract
     protected static function installCore(ConnectionAbstract $db) : void
     {
         self::createBaseTables($db);
-        self::installCoreModules($db);
+
+        $app = new class() extends ApplicationAbstract
+        {
+            protected string $appName = 'Api';
+        };
+
+        $app->dbPool = new DatabasePool();
+        $app->dbPool->add('select', $db);
+        $app->dbPool->add('insert', $db);
+        $app->dbPool->add('update', $db);
+        $app->dbPool->add('schema', $db);
+
+        self::$mManager     = new ModuleManager($app, __DIR__ . '/../Modules');
+        $app->moduleManager = self::$mManager;
+        $app->appSettings   = new CoreSettings($db);
+
+        self::$mManager->install('Admin');
+        self::$mManager->install('Auditor');
     }
 
     /**
@@ -253,13 +271,13 @@ abstract class InstallAbstract extends ApplicationAbstract
     {
         $path = __DIR__ . '/db.json';
 
-        if (!\file_exists($path)) {
+        if (!\is_file($path)) {
             return;
         }
 
         $content = \file_get_contents($path);
         if ($content === false) {
-            return;
+            return; // @codeCoverageIgnore
         }
 
         $definitions = \json_decode($content, true);
@@ -284,7 +302,6 @@ abstract class InstallAbstract extends ApplicationAbstract
             protected string $appName = 'Api';
         };
 
-
         $app->dbPool = new DatabasePool();
         $app->dbPool->add('select', $db);
         $app->dbPool->add('insert', $db);
@@ -295,8 +312,6 @@ abstract class InstallAbstract extends ApplicationAbstract
         $app->moduleManager = self::$mManager;
         $app->appSettings   = new CoreSettings($db);
 
-        self::$mManager->install('Admin');
-        self::$mManager->install('Auditor');
         self::$mManager->install('Organization');
         self::$mManager->install('Help');
         self::$mManager->install('Profile');
@@ -326,7 +341,7 @@ abstract class InstallAbstract extends ApplicationAbstract
         $collection = new Collection();
         $collection->setName('Modules');
         $collection->setVirtualPath('/');
-        $collection->setPath('/');
+        $collection->setPath('/Modules/Media/Files/Modules');
         $collection->setCreatedBy(new NullAccount(1));
 
         CollectionMapper::create($collection);
@@ -334,7 +349,7 @@ abstract class InstallAbstract extends ApplicationAbstract
         $collection = new Collection();
         $collection->setName('Accounts');
         $collection->setVirtualPath('/');
-        $collection->setPath('/');
+        $collection->setPath('/Modules/Media/Files/Accounts');
         $collection->setCreatedBy(new NullAccount(1));
 
         CollectionMapper::create($collection);
@@ -392,6 +407,7 @@ abstract class InstallAbstract extends ApplicationAbstract
     {
         $db->con->prepare(
             'INSERT INTO `group_permission` (`group_permission_group`, `group_permission_unit`, `group_permission_app`, `group_permission_module`, `group_permission_from`, `group_permission_type`, `group_permission_element`, `group_permission_component`, `group_permission_permission`) VALUES
+                (2, null, null, NULL, NULL, ' . \Modules\Admin\Models\PermissionState::SEARCH . ', NULL, NULL, ' . (PermissionType::READ) . '),
                 (3, null, null, NULL, NULL, NULL, NULL, NULL, ' . (PermissionType::READ | PermissionType::CREATE | PermissionType::MODIFY | PermissionType::DELETE | PermissionType::PERMISSION) . ');'
         )->execute();
     }
@@ -484,31 +500,18 @@ abstract class InstallAbstract extends ApplicationAbstract
      */
     protected static function installSettings(RequestAbstract $request, ConnectionAbstract $db) : void
     {
-        $db->con->prepare(
-            'INSERT INTO `settings` (`settings_name`, `settings_content`) VALUES
-                (' . Settings::PASSWORD_PATTERN . ', \'\'),
-                (' . Settings::LOGIN_TIMEOUT . ', \'3\'),
-                (' . Settings::PASSWORD_INTERVAL . ', \'90\'),
-                (' . Settings::PASSWORD_HISTORY . ', \'3\'),
-                (' . Settings::LOGIN_TRIES . ', \'3\'),
-                (' . Settings::LOGGING_STATUS . ', \'1\'),
-                (' . Settings::LOGGING_PATH . ', \'\'),
-                (' . Settings::DEFAULT_ORGANIZATION . ', \'1\'),
-                (1000000010, \'oms-slim\'),
-                (1000000011, \'/oms-slim\'),
-                (1000000012, \'1\'),
-                (' . Settings::LOGIN_STATUS . ', \'1\'),
-                (1000000014, \'Maintenance scheduled for tomorrow from 11:00 am to 1:00 pm.\'),
-                (1000000015, \'0\'),
-                (1000000016, \'0000-00-00 00:00:00\'),
-                (1000000017, \'0\'),
-                (1000000018, \'0\'),
-                (1000000019, \'DE\'),
-                (1000000020, \'en\'),
-                (1000000021, \'Europe/Berlin\'),
-                (1000000023, \'USD\'),
-                (1000000025, \'mail@admin.com\')'
-        )->execute();
+        $setting = new Setting();
+        SettingMapper::create($setting->with(0, SettingsEnum::PASSWORD_PATTERN, ''));
+        SettingMapper::create($setting->with(0, SettingsEnum::LOGIN_TRIES, '3'));
+        SettingMapper::create($setting->with(0, SettingsEnum::LOGIN_TIMEOUT, '3'));
+        SettingMapper::create($setting->with(0, SettingsEnum::PASSWORD_INTERVAL, '90'));
+        SettingMapper::create($setting->with(0, SettingsEnum::PASSWORD_HISTORY, '3'));
+        SettingMapper::create($setting->with(0, SettingsEnum::LOGGING_STATUS, '1'));
+        SettingMapper::create($setting->with(0, SettingsEnum::LOGGING_PATH, ''));
+        SettingMapper::create($setting->with(0, SettingsEnum::DEFAULT_ORGANIZATION, '1'));
+        SettingMapper::create($setting->with(0, SettingsEnum::LOGIN_STATUS, '1'));
+        SettingMapper::create($setting->with(0, SettingsEnum::DEFAULT_LOCALIZATION, '1'));
+        SettingMapper::create($setting->with(0, SettingsEnum::ADMIN_MAIL, 'admin@orange-management.org'));
 
         $l11n = Localization::fromLanguage($request->getData('defaultlang'), $request->getData('defaultcountry') ?? '*');
         LocalizationMapper::create($l11n);
